@@ -72,6 +72,7 @@ typedef struct{
 	unsigned int posNode;
 	unsigned int negNode;
 	char* modelName;	
+	double value; //optional value
 } Diode;
 
 
@@ -80,7 +81,7 @@ bool isDouble(char* value);
 void throwError(const char* errorMessage, int lineNum);
 double valueToDouble(char* value);
 unsigned char getType(char typeCode);
-unsigned int stringToNodeNum(char* node,  unsigned int* nodeHash, StrMap* nodeNameMap);
+unsigned int stringToNodeNum(char* node, StrMap* nodeNameMap);
 void printElement(Element* element);
 void printList();
 

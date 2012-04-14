@@ -57,19 +57,10 @@ void parseNetlist(FILE* file){
 	//allocate a hashtable for mapping node name to a node number.
 	StrMap* nodeNameMap = sm_new(4*MAX_ELEMENTS);
 	
-	//create an array that we will use for hashing the nodes
-	unsigned int* nodeHash = (unsigned int*)malloc((4 * MAX_ELEMENTS)*sizeof(unsigned int));
-	//initialize the hash with all zero
-	int i;
-	for(i = 0; i < 4*MAX_ELEMENTS; i++){
-		nodeHash[i] = 0;
-	}
-	
-	
 	while(fgets(line, MAX_LINE, file)){
 		int lineLen = strlen(line);
 		
-		word = strtok(line, " ");
+		word = strtok(line, " \t\n");
 		
 		if(sm_exists(nameMap, word)){
 			throwError("Reuse of element name", lineNum);
@@ -88,16 +79,16 @@ void parseNetlist(FILE* file){
 			//create element with 2 nodes and a value
 			if(elementChar == 'r' || elementChar == 'i' || elementChar == 'v' || elementChar == 'c' || elementChar == 'l'){
 				//parse rest of line according to definition for 2 terminal device: word node node value				
-				char* posNode = strtok(NULL, " ");
-				char* negNode = strtok(NULL, " ");
-				char* value = strtok(NULL, " ");
+				char* posNode = strtok(NULL, " \t\n");
+				char* negNode = strtok(NULL, " \t\n");
+				char* value = strtok(NULL, " \t\n");
 
 				//if any of these are null, the netlist did not have enough args
 				if(word == NULL || posNode == NULL || negNode == NULL || value == NULL){
 					throwError("Not enough parameters have been given", lineNum);
 				}
 				//if there is more tokens on line, netlist had too many args
-				if(strtok(NULL, " ") != NULL){
+				if(strtok(NULL, " \t\n") != NULL){
 					throwError("Too many arguments given", lineNum);
 				}
 
@@ -119,28 +110,28 @@ void parseNetlist(FILE* file){
 				char* wordPtr = (char*)malloc(strlen(word)*sizeof(char));
 				element->name = strncpy(wordPtr, word, strlen(word));
 				element->value = valueToDouble(value);
-				element->posNode = stringToNodeNum(posNode, nodeHash, nodeNameMap);
-				element->negNode = stringToNodeNum(negNode, nodeHash, nodeNameMap);
+				element->posNode = stringToNodeNum(posNode ,nodeNameMap);
+				element->negNode = stringToNodeNum(negNode, nodeNameMap);
 				element->type = getType(elementChar);
 				addToList(elementList, (Element*)element);
 				//printElement((Element*)element);
 
 			//element is a mosfet
 			}else if(elementChar == 'm'){
-				char* source = strtok(NULL, " ");
-				char* drain = strtok(NULL, " ");
-				char* gate = strtok(NULL, " ");
-				char* body = strtok(NULL, " ");
-				char* model = strtok(NULL, " ");
-				char* length = strtok(NULL, " ");
-				char* width = strtok(NULL, " ");
+				char* source = strtok(NULL, " \t\n");
+				char* drain = strtok(NULL, " \t\n");
+				char* gate = strtok(NULL, " \t\n");
+				char* body = strtok(NULL, " \t\n");
+				char* model = strtok(NULL, " \t\n");
+				char* length = strtok(NULL, " \t\n");
+				char* width = strtok(NULL, " \t\n");
 	
 				//if any of these are null, the netlist did not have enough args
 				if(word == NULL || source == NULL || drain == NULL || gate == NULL || body == NULL || model == NULL || length == NULL || width == NULL){
 					throwError("Not enough parameters have been given", lineNum);
 				}
 				//if there is more tokens on line, netlist had too many args
-				if(strtok(NULL, " ") != NULL){
+				if(strtok(NULL, " \t\n") != NULL){
 					throwError("Too many arguments given", lineNum);
 				}
 
@@ -170,10 +161,10 @@ void parseNetlist(FILE* file){
 				char* modelPtr = (char*)malloc(strlen(model)*sizeof(char));
 				element->modelName = strncpy(modelPtr, model, strlen(model));
 				element->type = getType(elementChar);
-				element->source = stringToNodeNum(source, nodeHash, nodeNameMap);
-				element->drain = stringToNodeNum(drain, nodeHash, nodeNameMap);
-				element->gate = stringToNodeNum(gate, nodeHash, nodeNameMap);
-				element->body = stringToNodeNum(body, nodeHash, nodeNameMap);
+				element->source = stringToNodeNum(source, nodeNameMap);
+				element->drain = stringToNodeNum(drain, nodeNameMap);
+				element->gate = stringToNodeNum(gate, nodeNameMap);
+				element->body = stringToNodeNum(body, nodeNameMap);
 				element->length = valueToDouble(length);
 				element->width = valueToDouble(width);
 				addToList(elementList, (Element*)element);
@@ -182,18 +173,18 @@ void parseNetlist(FILE* file){
 
 			//element has four nodes and a value
 			}else if(elementChar == 'g' || elementChar == 'f' || elementChar == 'e' || elementChar == 'h'){			
-				char* node0 = strtok(NULL, " ");
-				char* node1 = strtok(NULL, " ");
-				char* node2 = strtok(NULL, " ");
-				char* node3 = strtok(NULL, " ");
-				char* value = strtok(NULL, " ");
+				char* node0 = strtok(NULL, " \t\n");
+				char* node1 = strtok(NULL, " \t\n");
+				char* node2 = strtok(NULL, " \t\n");
+				char* node3 = strtok(NULL, " \t\n");
+				char* value = strtok(NULL, " \t\n");
 
 				//if any of these are null, the netlist did not have enough args
 				if(word == NULL || node0 == NULL  || node1 == NULL || node2 == NULL || node3 == NULL ||value == NULL){
 					throwError("Not enough parameters have been given", lineNum);
 				}
 				//if there is more tokens on line, netlist had too many args
-				if(strtok(NULL, " ") != NULL){
+				if(strtok(NULL, " \t\n") != NULL){
 					throwError("Too many arguments given", lineNum);
 				}
 
@@ -214,28 +205,40 @@ void parseNetlist(FILE* file){
 				char* wordPtr = (char*)malloc(strlen(word)*sizeof(char));
 				element->name = strncpy(wordPtr, word, strlen(word));
 				element->value = valueToDouble(value);
-				element->node0 = stringToNodeNum(node0, nodeHash, nodeNameMap);
-				element->node1 = stringToNodeNum(node1, nodeHash, nodeNameMap);
-				element->node2 = stringToNodeNum(node2, nodeHash, nodeNameMap);
-				element->node3 = stringToNodeNum(node3, nodeHash, nodeNameMap);
+				element->node0 = stringToNodeNum(node0, nodeNameMap);
+				element->node1 = stringToNodeNum(node1, nodeNameMap);
+				element->node2 = stringToNodeNum(node2, nodeNameMap);
+				element->node3 = stringToNodeNum(node3, nodeNameMap);
 				element->type = getType(elementChar);
 				addToList(elementList, (Element*)element);
 				//printElement((Element*)element);
 
 			}else if(elementChar == 'd'){
 				//parse rest of line according to definition for 2 terminal device: word node node model_name				
-				char* posNode = strtok(NULL, " ");
-				char* negNode = strtok(NULL, " ");
-				char* model = strtok(NULL, " ");
+				char* posNode = strtok(NULL, " \t\n");
+				char* negNode = strtok(NULL, " \t\n");
+				char* model = strtok(NULL, " \t\n");
+				double value = 1;
 
 				//if any of these are null, the netlist did not have enough args
 				if(word == NULL || posNode == NULL || negNode == NULL || model == NULL){
 					throwError("Not enough parameters have been given", lineNum);
 				}
 				//if there is more tokens on line, netlist had too many args
-				char* extras = strtok(NULL, " ");
+				char* extras = strtok(NULL, " \t\n");
 				if(extras != NULL && (*extras != '\n')){
-					throwError("Too many arguments given", lineNum);
+					//optional value param found
+					if(!isDouble(extras)){
+						throwError("The value argument must be in scientific notation", lineNum);
+					}else{
+						value = valueToDouble(extras);
+					}
+
+					//more that the allows args are present
+					extras = strtok(NULL, " \t\n");
+					if(extras != NULL && (*extras != '\n')){
+						throwError("Too many arguments given", lineNum);
+					}
 				}
 
 				//make sure that none of the strings are > MAX_STRING chars
@@ -252,9 +255,10 @@ void parseNetlist(FILE* file){
 				element->name = strncpy(wordPtr, word, strlen(word));
 				char* modelPtr = (char*)malloc(strlen(model)*sizeof(char));
 				element->modelName = strncpy(modelPtr, model, strlen(model));
-				element->posNode = stringToNodeNum(posNode, nodeHash, nodeNameMap);
-				element->negNode = stringToNodeNum(negNode, nodeHash, nodeNameMap);
+				element->posNode = stringToNodeNum(posNode, nodeNameMap);
+				element->negNode = stringToNodeNum(negNode, nodeNameMap);
 				element->type = getType(elementChar);
+				element->value = value;
 				
 				addToList(elementList, (Element*)element);
 				//printElement((Element*)element);
@@ -266,7 +270,6 @@ void parseNetlist(FILE* file){
 	}
 	sm_delete(nameMap);
 	sm_delete(nodeNameMap);
-	free(nodeHash);
 }
 
 
@@ -350,37 +353,20 @@ unsigned char getType(char typeCode){
 	}
 }
 
-unsigned int stringToNodeNum(char* node, unsigned int* nodeHash, StrMap* nodeNameMap){
-	int nodeNum = atoi(node);
-	if(nodeNum > 0 || *node == '0'){
-		if(nodeHash[nodeNum] == 0){
-			addToNodeList(nodeList, nodeNum);
-		}
-		
-		nodeHash[nodeNum] = 1;
-		return nodeNum;
+unsigned int stringToNodeNum(char* node, StrMap* nodeNameMap){
+	static unsigned int freeNode = 0;
+	char* out_buff = (char*)malloc(4*sizeof(char));
+	if(sm_exists(nodeNameMap, node)){
+		sm_get(nodeNameMap, node, out_buff, 4);
+		return atoi(out_buff);
 	}else{
-		char* out_buff = (char*)malloc(4*sizeof(char));
-		if(sm_exists(nodeNameMap, node)){
-			sm_get(nodeNameMap, node, out_buff, 4);
-			return atoi(out_buff);
-		}else{
-			int i = 0;
-			while(nodeHash[i] == 1 && i < 4*MAX_ELEMENTS){
-				i++;
-			}
-			if(i < 4*MAX_ELEMENTS){
-				sprintf(out_buff, "%d", i);
-				nodeHash[i] = 1;
-				sm_put(nodeNameMap, node, out_buff);
-				addToNodeList(nodeList, i);
-				return i; 
-			}else{
-				throwError("Node Overflow", 0);
-			}	
-		}
-		free(out_buff);
+		
+		sprintf(out_buff, "%d", freeNode);
+		sm_put(nodeNameMap, node, out_buff);
+		addToNodeList(nodeList, freeNode);	
+		return freeNode++; 
 	}
+	free(out_buff);
 }
 
 void printElement(Element* element){
@@ -396,7 +382,7 @@ void printElement(Element* element){
 
 	}else if(element->type == DIODE){
 		Diode* myElement = (Diode*) element;		
-		printf("name: %s \n posNode: %d \n negNode: %d \n modelName: %s \n", myElement->name, myElement->posNode, myElement->negNode, myElement->modelName);
+		printf("name: %s \n posNode: %d \n negNode: %d \n modelName: %s value: %f\n", myElement->name, myElement->posNode, myElement->negNode, myElement->modelName, myElement->value);
 
 	}else if(element->type == MOSFET){
 		Mosfet* myElement = (Mosfet*) element;
