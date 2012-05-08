@@ -4,6 +4,12 @@
 #include <ctype.h>
 #include "netlistparser.h"
 #include "LinkedList.h"
+#include <math.h>
+#include "sparse/src/spMatrix.h" 
+
+#define M_PI 3.1415926
+
+#define spREAL double
 
 
 /**
@@ -35,10 +41,12 @@ int main(int argc, char *argv[]){
 	
 	parseNetlist(file);
 	
+	buildMatrix();
+	
 	fclose(file);
 
-	printList();
-	printNodeList(nodeList);
+	//printList();
+	//printNodeList(nodeList);
 
 	return 0;
 }
@@ -403,3 +411,39 @@ void printList(){
 		}
 	}
 }	
+
+void buildMatrix(){
+	struct complex{
+		double re;
+		double im;
+	} x[3],b[3];
+
+	double f,omega;
+
+	spMatrix A;
+	spError err;
+	struct spTemplate Stamp[3];
+	
+	A = spCreate(0, 1, &err);
+	
+	spGetAdmittance(A,1,0, &Stamp[0]);
+    spGetAdmittance(A,1,2, &Stamp[1]);
+    spGetAdmittance(A,0,3, &Stamp[2]);
+    
+    b[0].re=0.0; b[0].im=0.0;
+    b[1].re=1.0; b[1].im=0.0;
+    b[2].re=0.0; b[2].im=0.0;
+    
+    spADD_REAL_QUAD(Stamp[0],1.0);
+    spADD_REAL_QUAD(Stamp[1],1.0);
+    spADD_REAL_QUAD(Stamp[2],2.0);
+    
+    spPrint(A, 1, 1, 1);
+    
+    err=spFactor(A);
+    spSolve(A, (spREAL *)b, (spREAL *)x);
+    
+    printf("x0=%6.2e\n",x[0].re);
+    printf("x1=%6.2e\n",x[1].re);
+    printf("x2=%6.2e\n",x[2].re);
+}
