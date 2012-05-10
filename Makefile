@@ -1,10 +1,12 @@
 #Greg Sterin  and Quincy Wu
 #EE415 SPICE SIMULATOR MAKEFILE
 
-netlistparser: netlistparser.o LinkedList.o strmap.o
-	gcc -Wall -g -o netlistparser netlistparser.o LinkedList.o strmap.o
+OFILES = sparse/src/spAllocate.o sparse/src/spBuild.o sparse/src/spFactor.o sparse/src/spOutput.o sparse/src/spSolve.o sparse/src/spUtils.o sparse/src/spFortran.o
+
+netlistparser: netlistparser.o LinkedList.o strmap.o $(OFILES)
+	gcc -Wall -g -o netlistparser netlistparser.o LinkedList.o strmap.o $(OFILES)
 	
-netlistparser.o: netlistparser.c strmap.h netlistparser.h LinkedList.h
+netlistparser.o: netlistparser.c strmap.h netlistparser.h LinkedList.h sparse/src/spMatrix.h
 	gcc -Wall -g -c netlistparser.c
 	
 LinkedList.o: LinkedList.c LinkedList.h netlistparser.h
